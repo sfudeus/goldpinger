@@ -6,10 +6,11 @@ tag = $(name):$(version)
 goos ?= ${GOOS}
 namespace ?= "bloomberg/"
 files = $(shell find . -iname "*.go")
+arch ?= amd64
 
 
 bin/$(bin): $(files)
-	GOOS=${goos} PKG=${pkg} ARCH=amd64 VERSION=${version} BIN=${bin} ./build/build.sh
+	GOOS=${goos} PKG=${pkg} ARCH=${arch} VERSION=${version} BIN=${bin} ./build/build.sh
 
 clean:
 	rm -rf ./vendor
@@ -26,6 +27,12 @@ swagger:
 
 build-multistage:
 	docker build -t $(tag) -f ./Dockerfile .
+
+build-multiarch:
+	docker buildx build --platform linux/amd64 --platform linux/arm/v7 --platform linux/arm64 -t $(tag) -f ./Dockerfile .
+
+push-multiarch:
+	docker buildx build --platform linux/amd64 --platform linux/arm/v7 --platform linux/arm64 -t $(namespace)$(tag) -f ./Dockerfile --push .
 
 build: GOOS=linux
 build: bin/$(bin)
@@ -54,4 +61,4 @@ vendor-push:
 	docker push $(namespace)$(tag)-vendor
 
 
-.PHONY: clean vendor swagger build build-multistage vendor-build vendor-tag vendor-push tag push run version
+.PHONY: clean vendor swagger build build-multistage build-multiarch push-multiarch vendor-build vendor-tag vendor-push tag push run version

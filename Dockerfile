@@ -1,4 +1,7 @@
-FROM golang:1.14-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.14-alpine as builder
+
+ARG TARGETOS
+ARG TARGETARCH
 
 # Install our build tools
 
@@ -13,7 +16,7 @@ RUN go mod download
 # Build goldpinger
 
 COPY . ./
-RUN make bin/goldpinger
+RUN goos=$TARGETOS arch=$TARGETARCH make bin/goldpinger
 
 # Build the asset container, copy over goldpinger
 
